@@ -432,25 +432,6 @@ Validation includes:
 
 ---
 
-## Future Improvements
-
-Planned or possible extensions:
-
-- Add a self-checking dual-core processor testbench
-- Add SystemVerilog assertions for arbitration, FSM behavior, register writeback, and x0 invariance
-- Add memory-mapped UART output
-- Add a mailbox communication mechanism between cores
-- Add cycle counters to compare single-core and dual-core program behavior
-- Add waveform screenshots for each instruction class
-- Add a pipelined version of the TinyRV core
-- Add hazard detection and forwarding for a future pipelined design
-- Add a simple instruction assembler to generate `.mif` files
-- Improve timing closure through datapath/control optimization
-- Add clearer board-control documentation
-- Add demo photos or videos of the design running on FPGA
-
----
-
 ## What I Learned
 
 Through this project, I gained experience with:
