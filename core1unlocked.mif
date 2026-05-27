@@ -1,0 +1,59 @@
+-- Core 1 no-lock delayed race demo
+--
+-- Core 1 waits for core 0 to set start = 1.
+-- Then both cores increment shared counter 10 times without a lock.
+--
+-- Final:
+--   x8 = final shared counter
+--   PC = 000060
+
+WIDTH=32;
+DEPTH=1024;
+
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+    000 : 10000293; -- addi x5,  x0, 256      ; counter addr 0x100
+    001 : 11000B93; -- addi x23, x0, 272      ; start addr 0x110
+    002 : 11400C13; -- addi x24, x0, 276      ; done0 addr 0x114
+    003 : 11800C93; -- addi x25, x0, 280      ; done1 addr 0x118
+    004 : 00100593; -- addi x11, x0, 1        ; constant 1
+
+    -- wait for start
+    005 : 000BA503; -- lw   x10, 0(x23)       ; read start
+    006 : FE050EE3; -- beq  x10, x0, wait_start
+
+    007 : 00A00393; -- addi x7,  x0, 10       ; loop limit = 10
+    008 : 00000413; -- addi x8,  x0, 0        ; i = 0
+
+    -- loop:
+    009 : 0002A483; -- lw   x9, 0(x5)         ; load counter
+
+    -- delay after load
+    00A : 02800613; -- addi x12, x0, 40       ; delay count = 40
+    00B : FFF60613; -- addi x12, x12, -1      ; delay--
+    00C : FE061EE3; -- bne  x12, x0, delay1
+
+    00D : 00148493; -- addi x9, x9, 1         ; counter + 1
+
+    -- delay before store
+    00E : 02800613; -- addi x12, x0, 40       ; delay count = 40
+    00F : FFF60613; -- addi x12, x12, -1      ; delay--
+    010 : FE061EE3; -- bne  x12, x0, delay2
+
+    011 : 0092A023; -- sw   x9, 0(x5)         ; store counter
+    012 : 00140413; -- addi x8, x8, 1         ; i++
+    013 : FC741CE3; -- bne  x8, x7, loop      ; repeat until i == 10
+
+    014 : 00BCA023; -- sw   x11, 0(x25)       ; done1 = 1
+
+    -- wait for core 0 done
+    015 : 000C2503; -- lw   x10, 0(x24)       ; read done0
+    016 : FE050EE3; -- beq  x10, x0, wait_done0
+
+    017 : 0002A403; -- lw   x8, 0(x5)         ; x8 = final counter
+    018 : 00000063; -- beq  x0, x0, 0         ; stop, PC = 0x60
+
+    [019..3FF] : 00000013;
+END;

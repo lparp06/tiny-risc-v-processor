@@ -1,0 +1,72 @@
+-- Core 1 Peterson-lock demo
+--
+-- Core 1 waits for core 0 to initialize shared variables.
+-- Both cores increment the shared counter 10 times.
+-- Peterson's lock prevents lost updates.
+--
+-- Expected final:
+--   x8 = 000014   // 20 decimal
+--   PC = 000070
+
+WIDTH=32;
+DEPTH=1024;
+
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+    000 : 10000293; -- addi x5,  x0, 256      ; counter address 0x100
+    001 : 10400A13; -- addi x20, x0, 260      ; flag0 address 0x104
+    002 : 10800A93; -- addi x21, x0, 264      ; flag1 address 0x108
+    003 : 10C00B13; -- addi x22, x0, 268      ; turn address 0x10C
+    004 : 11000B93; -- addi x23, x0, 272      ; start address 0x110
+    005 : 11400C13; -- addi x24, x0, 276      ; done0 address 0x114
+    006 : 11800C93; -- addi x25, x0, 280      ; done1 address 0x118
+    007 : 00100593; -- addi x11, x0, 1        ; constant 1
+
+    -- wait_start:
+    008 : 000BA503; -- lw   x10, 0(x23)       ; x10 = start
+    009 : FE050EE3; -- beq  x10, x0, wait_start
+
+    00A : 00A00393; -- addi x7, x0, 10        ; loop limit = 10
+    00B : 00000413; -- addi x8, x0, 0         ; i = 0
+
+    -- loop:
+    -- lock for core 1:
+    -- flag1 = 1;
+    -- turn = 0;
+    00C : 00BAA023; -- sw   x11, 0(x21)       ; flag1 = 1
+    00D : 000B2023; -- sw   x0,  0(x22)       ; turn = 0
+
+    -- wait while flag0 == 1 && turn == 0
+    00E : 000A2483; -- lw   x9,  0(x20)       ; x9 = flag0
+    00F : 00048663; -- beq  x9,  x0, got_lock
+    010 : 000B2503; -- lw   x10, 0(x22)       ; x10 = turn
+    011 : FE050AE3; -- beq  x10, x0, wait
+
+    -- got_lock:
+    -- critical section: counter++
+    012 : 0002A483; -- lw   x9, 0(x5)         ; load counter
+    013 : 00148493; -- addi x9, x9, 1         ; counter++
+    014 : 0092A023; -- sw   x9, 0(x5)         ; store counter
+
+    -- unlock: flag1 = 0
+    015 : 000AA023; -- sw   x0, 0(x21)        ; flag1 = 0
+
+    -- i++
+    016 : 00140413; -- addi x8, x8, 1         ; i++
+    017 : FC741AE3; -- bne  x8, x7, loop
+
+    -- done1 = 1
+    018 : 00BCA023; -- sw   x11, 0(x25)       ; done1 = 1
+
+    -- wait for done0
+    019 : 000C2503; -- lw   x10, 0(x24)       ; x10 = done0
+    01A : FE050EE3; -- beq  x10, x0, wait_done0
+
+    -- load final counter into x8
+    01B : 0002A403; -- lw   x8, 0(x5)         ; x8 = final counter
+    01C : 00000063; -- beq  x0, x0, 0         ; stop, PC = 0x70
+
+    [01D..3FF] : 00000013;
+END;
