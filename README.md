@@ -2,13 +2,6 @@
 
 A dual-core TinyRV processor system implemented in Verilog for FPGA deployment. The project began as a single-core multicycle TinyRV processor and was extended into a dual-core shared-memory system with arbitration, per-core stalling, FPGA debug visibility, and TinyRV programs demonstrating race conditions and Peterson-lock mutual exclusion.
 
-![Language](https://img.shields.io/badge/Language-Verilog-blue)
-![Platform](https://img.shields.io/badge/Platform-FPGA-lightgrey)
-![Focus](https://img.shields.io/badge/Focus-Computer%20Architecture-green)
-![Design](https://img.shields.io/badge/Design-Dual--Core%20Processor-purple)
-
----
-
 ## Overview
 
 This project implements a TinyRV processor system in Verilog. The design supports a multicycle processor datapath with instruction fetch, decode, execute, memory, and writeback behavior controlled by a finite-state machine.
